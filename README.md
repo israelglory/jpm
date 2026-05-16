@@ -29,7 +29,7 @@ jpm add web
 Use the automated installer:
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/your-org/jpm/main/install-jpm.sh | bash -s -- v1.0.0
+curl -sSL https://raw.githubusercontent.com/your-org/jpm/main/install-jpm.sh | bash -s -- v1.0.3
 ```
 
 Or specify `latest`:
