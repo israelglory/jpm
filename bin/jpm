@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+# Local launcher for JPM development/testing
+# Usage: ./bin/jpm add postgres
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+JAR_FILE="$SCRIPT_DIR/target/jpm-1.0.0.jar"
+
+if [ ! -f "$JAR_FILE" ]; then
+    echo "Error: JAR not found at $JAR_FILE"
+    echo "Please build first: mvn clean package"
+    exit 1
+fi
+
+exec java -jar "$JAR_FILE" "$@"
+
