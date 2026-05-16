@@ -95,68 +95,87 @@ jobs:
           echo "jar=$PWD/$JAR" >> "$GITHUB_OUTPUT"
           echo "sha=$PWD/$SHA" >> "$GITHUB_OUTPUT"
 
-      - name: Upload release JAR asset (with retries)
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          UPLOAD_URL: ${{ steps.create_release.outputs.upload_url }}
-          JAR_PATH: ${{ steps.find_jar.outputs.jar }}
-          REF_NAME: ${{ github.ref_name }}
-        run: |
-          set -euo pipefail
-          # normalize upload URL (remove template part)
-          UPLOAD_URL_REAL="${UPLOAD_URL%\{*}"
-          VERSION="${REF_NAME#v}"
-          ASSET_NAME="jpm-${VERSION}.jar"
-          echo "Uploading $JAR_PATH as $ASSET_NAME to $UPLOAD_URL_REAL"
+       - name: Prepare assets for upload (rename and fix checksums)
+         env:
+           JAR_PATH: ${{ steps.find_jar.outputs.jar }}
+           SHA_PATH: ${{ steps.find_jar.outputs.sha }}
+           REF_NAME: ${{ github.ref_name }}
+         run: |
+           set -euo pipefail
+           VERSION="${REF_NAME#v}"
+           ASSET_NAME="jpm-${VERSION}.jar"
+           CHECKSUM_NAME="${ASSET_NAME}.sha256"
+           
+           # Extract directory and original filenames
+           JAR_DIR=$(dirname "$JAR_PATH")
+           JAR_FILENAME=$(basename "$JAR_PATH")
+           
+           # Copy files to temp location with final names
+           cp "$JAR_PATH" "$JAR_DIR/$ASSET_NAME"
+           
+           # Rewrite checksum file to use the new asset name
+           HASH=$(awk '{print $1}' "$SHA_PATH")
+           echo "$HASH  $ASSET_NAME" > "$JAR_DIR/$CHECKSUM_NAME"
+           
+           # Output paths for next step
+           echo "jar=$JAR_DIR/$ASSET_NAME" >> "$GITHUB_ENV"
+           echo "sha=$JAR_DIR/$CHECKSUM_NAME" >> "$GITHUB_ENV"
+           echo "asset_name=$ASSET_NAME" >> "$GITHUB_ENV"
+           echo "checksum_name=$CHECKSUM_NAME" >> "$GITHUB_ENV"
 
-          for i in 1 2 3 4 5; do
-            if curl --fail -X POST \
-                -H "Authorization: token ${GITHUB_TOKEN}" \
-                -H "Content-Type: application/java-archive" \
-                --data-binary @"${JAR_PATH}" "${UPLOAD_URL_REAL}?name=${ASSET_NAME}"; then
-              echo "Upload succeeded"
-              break
-            else
-              echo "Upload attempt $i failed"
-              if [ $i -lt 5 ]; then
-                sleep $((i * 2))
-                echo "Retrying..."
-              else
-                echo "All upload attempts failed"
-                exit 1
-              fi
-            fi
-          done
+       - name: Upload release JAR asset (with retries)
+         env:
+           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+           UPLOAD_URL: ${{ steps.create_release.outputs.upload_url }}
+         run: |
+           set -euo pipefail
+           UPLOAD_URL_REAL="${UPLOAD_URL%\{*}"
+           echo "Uploading ${{ env.asset_name }} to $UPLOAD_URL_REAL"
 
-      - name: Upload release checksum asset (with retries)
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          UPLOAD_URL: ${{ steps.create_release.outputs.upload_url }}
-          SHA_PATH: ${{ steps.find_jar.outputs.sha }}
-          REF_NAME: ${{ github.ref_name }}
-        run: |
-          set -euo pipefail
-          UPLOAD_URL_REAL="${UPLOAD_URL%\{*}"
-          VERSION="${REF_NAME#v}"
-          ASSET_NAME="jpm-${VERSION}.jar.sha256"
-          echo "Uploading $SHA_PATH as $ASSET_NAME to $UPLOAD_URL_REAL"
+           for i in 1 2 3 4 5; do
+             if curl --fail -X POST \
+                 -H "Authorization: token ${GITHUB_TOKEN}" \
+                 -H "Content-Type: application/java-archive" \
+                 --data-binary @"${{ env.jar }}" "${UPLOAD_URL_REAL}?name=${{ env.asset_name }}"; then
+               echo "Upload succeeded"
+               break
+             else
+               echo "Upload attempt $i failed"
+               if [ $i -lt 5 ]; then
+                 sleep $((i * 2))
+                 echo "Retrying..."
+               else
+                 echo "All upload attempts failed"
+                 exit 1
+               fi
+             fi
+           done
 
-          for i in 1 2 3 4 5; do
-            if curl --fail -X POST \
-                -H "Authorization: token ${GITHUB_TOKEN}" \
-                -H "Content-Type: text/plain" \
-                --data-binary @"${SHA_PATH}" "${UPLOAD_URL_REAL}?name=${ASSET_NAME}"; then
-              echo "Checksum upload succeeded"
-              break
-            else
-              echo "Checksum upload attempt $i failed"
-              if [ $i -lt 5 ]; then
-                sleep $((i * 2))
-                echo "Retrying..."
-              else
-                echo "All checksum upload attempts failed"
-                exit 1
-              fi
-            fi
-          done
+       - name: Upload release checksum asset (with retries)
+         env:
+           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+           UPLOAD_URL: ${{ steps.create_release.outputs.upload_url }}
+         run: |
+           set -euo pipefail
+           UPLOAD_URL_REAL="${UPLOAD_URL%\{*}"
+           echo "Uploading ${{ env.checksum_name }} to $UPLOAD_URL_REAL"
+
+           for i in 1 2 3 4 5; do
+             if curl --fail -X POST \
+                 -H "Authorization: token ${GITHUB_TOKEN}" \
+                 -H "Content-Type: text/plain" \
+                 --data-binary @"${{ env.sha }}" "${UPLOAD_URL_REAL}?name=${{ env.checksum_name }}"; then
+               echo "Checksum upload succeeded"
+               break
+             else
+               echo "Checksum upload attempt $i failed"
+               if [ $i -lt 5 ]; then
+                 sleep $((i * 2))
+                 echo "Retrying..."
+               else
+                 echo "All checksum upload attempts failed"
+                 exit 1
+               fi
+             fi
+           done
 
