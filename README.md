@@ -29,13 +29,13 @@ jpm add web
 Use the automated installer:
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/your-org/jpm/main/install-jpm.sh | bash -s -- v1.0.3
+curl -sSL https://raw.githubusercontent.com/israelglory/jpm/main/install-jpm.sh | bash -s -- v1.0.3
 ```
 
 Or specify `latest`:
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/your-org/jpm/main/install-jpm.sh | bash -s -- latest
+curl -sSL https://raw.githubusercontent.com/israelglory/jpm/main/install-jpm.sh | bash -s -- latest
 ```
 
 ## Project structure
@@ -95,7 +95,7 @@ java -cp target/classes Main add lombok
 mvn clean package
 ```
 
-The JAR will be at `target/jpm-1.0.0.jar`.
+The JAR will be at `target/jpm-1.0.3.jar`.
 
 
 
