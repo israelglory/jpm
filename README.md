@@ -10,6 +10,8 @@ jpm add lombok
 jpm add web
 ```
 
+
+
 ## What it does
 
 - Parses terminal commands
@@ -19,6 +21,22 @@ jpm add web
 - Updates `pom.xml` using DOM XML parsing
 - Prevents duplicate direct dependencies
 - Saves the modified file safely
+
+## Installation & Distribution
+
+### From GitHub Releases (recommended)
+
+Use the automated installer:
+
+```bash
+curl -sSL https://raw.githubusercontent.com/your-org/jpm/main/install-jpm.sh | bash -s -- v1.0.0
+```
+
+Or specify `latest`:
+
+```bash
+curl -sSL https://raw.githubusercontent.com/your-org/jpm/main/install-jpm.sh | bash -s -- latest
+```
 
 ## Project structure
 
@@ -79,21 +97,7 @@ mvn clean package
 
 The JAR will be at `target/jpm-1.0.0.jar`.
 
-## Installation & Distribution
 
-### From GitHub Releases (recommended)
-
-Use the automated installer:
-
-```bash
-curl -sSL https://raw.githubusercontent.com/your-org/jpm/main/install-jpm.sh | bash -s -- v1.0.0
-```
-
-Or specify `latest`:
-
-```bash
-curl -sSL https://raw.githubusercontent.com/your-org/jpm/main/install-jpm.sh | bash -s -- latest
-```
 
 ### Homebrew (if you set up a tap)
 
