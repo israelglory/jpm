@@ -9,6 +9,11 @@ set -euo pipefail
 
 VERSION="${1:-latest}"
 REPO="${2:-israelglory/jpm}"
+
+# Ensure REPO is in the format "owner/repo"
+if [[ "$REPO" != *"/"* ]]; then
+    REPO="${REPO}/jpm"
+fi
 INSTALL_DIR="${INSTALL_DIR:-/usr/local/lib/jpm}"
 BIN_DIR="${BIN_DIR:-/usr/local/bin}"
 USING_SUDO=false
@@ -58,39 +63,40 @@ if ! curl -sSL -o "$TMPDIR/$JAR_NAME" "$JAR_URL"; then
 fi
 
 # Verify checksum if available
-SHA256_URL="$BASE_URL/$JAR_NAME.sha256"
 echo "Verifying checksum..."
-HTTP_CODE=$(curl -sSL -w "%{http_code}" -o "$TMPDIR/jpm.sha256" "$SHA256_URL")
-if [ "$HTTP_CODE" = "200" ]; then
-    # Validate that the file contains a valid SHA256 checksum (64 hex chars)
-    EXPECTED_HASH=$(awk '{print $1}' "$TMPDIR/jpm.sha256" | head -1)
-    if [[ "$EXPECTED_HASH" =~ ^[a-f0-9]{64}$ ]]; then
-        # Calculate actual hash
-        ACTUAL_HASH=$(sha256sum "$TMPDIR/$JAR_NAME" | awk '{print $1}')
-        if [ "$EXPECTED_HASH" = "$ACTUAL_HASH" ]; then
-            echo "✓ Checksum verified"
+# Use GitHub API to get release assets and find the checksum file
+CHECKSUM_URL=$(curl -sSL "https://api.github.com/repos/$REPO/releases/tags/$RELEASE_TAG" | grep -o '"browser_download_url": "[^"]*\.sha256"' | cut -d'"' -f4)
+if [ -n "$CHECKSUM_URL" ]; then
+    if curl -sSL -o "$TMPDIR/jpm.sha256" "$CHECKSUM_URL"; then
+        # Validate that the file contains a valid SHA256 checksum (64 hex chars)
+        EXPECTED_HASH=$(head -1 "$TMPDIR/jpm.sha256" | awk '{print $1}')
+        if echo "$EXPECTED_HASH" | grep -qE '^[a-f0-9]{64}$'; then
+            # Calculate actual hash
+            ACTUAL_HASH=$(sha256sum "$TMPDIR/$JAR_NAME" | awk '{print $1}')
+            if [ "$EXPECTED_HASH" = "$ACTUAL_HASH" ]; then
+                echo "✓ Checksum verified"
+            else
+                echo "✘ Error: Checksum mismatch"
+                echo "  Expected: $EXPECTED_HASH"
+                echo "  Actual:   $ACTUAL_HASH"
+                exit 1
+            fi
         else
-            echo "✘ Error: Checksum mismatch"
-            echo "  Expected: $EXPECTED_HASH"
-            echo "  Actual:   $ACTUAL_HASH"
+            echo "✘ Error: Invalid checksum format"
+            echo "  Got: $EXPECTED_HASH"
+            echo "  Expected: 64-character hex string"
+            echo "  Checksum file content:"
+            cat "$TMPDIR/jpm.sha256"
             exit 1
         fi
     else
-        echo "✘ Error: Invalid checksum format"
-        echo "  Got: $EXPECTED_HASH"
-        echo "  Expected: 64-character hex string"
-        echo "  Checksum file content:"
-        cat "$TMPDIR/jpm.sha256"
-        exit 1
+        echo "⚠ Warning: Could not download checksum file"
+        echo "  URL: $CHECKSUM_URL"
+        echo "  Skipping verification"
     fi
-elif [ "$HTTP_CODE" = "404" ]; then
-    echo "⚠ Warning: Checksum file not found (404)"
-    echo "  Skipping checksum verification"
-    echo "  URL: $SHA256_URL"
 else
-    echo "⚠ Warning: Could not download checksum (HTTP $HTTP_CODE)"
+    echo "⚠ Warning: No checksum file found in release"
     echo "  Skipping checksum verification"
-fi
 fi
 
 # Determine if we need sudo for system directories
