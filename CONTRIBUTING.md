@@ -6,7 +6,7 @@ Thank you for your interest in JPM! We welcome contributions. Here's how to get 
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/your-org/jpm.git
+   git clone https://github.com/israelgloey/jpm.git
    cd jpm
    ```
 
@@ -17,7 +17,7 @@ Thank you for your interest in JPM! We welcome contributions. Here's how to get 
 
 3. Test a local build:
    ```bash
-   java -jar target/jpm-1.0.0-SNAPSHOT.jar add postgres
+   java -jar target/jpm-1.0.3-SNAPSHOT.jar add postgres
    ```
 
 ## Code Style
