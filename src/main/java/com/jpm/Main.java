@@ -15,12 +15,12 @@ public final class Main {
             "Usage:",
             "  jpm add <alias>",
             "",
-            "Supported aliases:",
+            "Supported aliases (example):",
             "  postgres",
             "  lombok",
             "  web");
 
-    private static final String VERSION = "1.0.0";
+    private static final String VERSION = "1.0.3";
 
     private final DependencyResolver dependencyResolver;
     private final PomEditor pomEditor;

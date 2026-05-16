@@ -1,6 +1,6 @@
 # JPM (Java Package Manager)
 
-JPM is a small Java CLI tool that adds Maven dependencies to `pom.xml` using simple aliases.
+JPM is a Java CLI tool that adds Maven dependencies to `pom.xml` using simple aliases.
 
 ## MVP commands
 
@@ -98,7 +98,7 @@ curl -sSL https://raw.githubusercontent.com/your-org/jpm/main/install-jpm.sh | b
 ### Homebrew (if you set up a tap)
 
 ```bash
-brew tap your-org/jpm https://github.com/your-org/homebrew-jpm
+brew tap your-org/jpm https://github.com/israelglory/homebrew-jpm
 brew install your-org/jpm/jpm
 ```
 
@@ -160,14 +160,23 @@ Missing `pom.xml`:
 ✘ No pom.xml found
 ```
 
-## Suggested MVP improvements
+[//]: # ()
+[//]: # (## Suggested MVP improvements)
 
-1. Add support for direct coordinates like `jpm add org.slf4j:slf4j-api`
-2. Add more aliases and categories
-3. Support plugin dependencies and `dependencyManagement`
-4. Add offline caching for Maven Central responses
-5. Add tests for XML edge cases and HTTP failures
-6. Preserve original formatting more closely when rewriting `pom.xml`
-7. Add a dedicated `--version` and `--help` command
-8. Add update/remove commands
+[//]: # ()
+[//]: # (1. Add support for direct coordinates like `jpm add org.slf4j:slf4j-api`)
+
+[//]: # (2. Add more aliases and categories)
+
+[//]: # (3. Support plugin dependencies and `dependencyManagement`)
+
+[//]: # (4. Add offline caching for Maven Central responses)
+
+[//]: # (5. Add tests for XML edge cases and HTTP failures)
+
+[//]: # (6. Preserve original formatting more closely when rewriting `pom.xml`)
+
+[//]: # (7. Add a dedicated `--version` and `--help` command)
+
+[//]: # (8. Add update/remove commands)
 
