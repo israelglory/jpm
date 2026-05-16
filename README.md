@@ -138,7 +138,7 @@ jpm version
 
 ## Support & Contributions
 
-- Report issues on [GitHub Issues](https://github.com/your-org/jpm/issues)
+- Report issues on [GitHub Issues](https://github.com/israelglory/jpm/issues)
 - See [CONTRIBUTING.md](CONTRIBUTING.md) for contribution guidelines
 - See [CHANGELOG.md](CHANGELOG.md) for release history
 
