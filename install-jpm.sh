@@ -59,11 +59,12 @@ fi
 
 # Verify checksum if available
 SHA256_URL="$BASE_URL/$JAR_NAME.sha256"
-if curl -sSL -o "$TMPDIR/jpm.sha256" "$SHA256_URL" 2>/dev/null; then
-    echo "Verifying checksum..."
-    # Extract just the hash (first field) from the checksum file
+echo "Verifying checksum..."
+HTTP_CODE=$(curl -sSL -w "%{http_code}" -o "$TMPDIR/jpm.sha256" "$SHA256_URL")
+if [ "$HTTP_CODE" = "200" ]; then
+    # Validate that the file contains a valid SHA256 checksum (64 hex chars)
     EXPECTED_HASH=$(awk '{print $1}' "$TMPDIR/jpm.sha256" | head -1)
-    if [ -n "$EXPECTED_HASH" ]; then
+    if [[ "$EXPECTED_HASH" =~ ^[a-f0-9]{64}$ ]]; then
         # Calculate actual hash
         ACTUAL_HASH=$(sha256sum "$TMPDIR/$JAR_NAME" | awk '{print $1}')
         if [ "$EXPECTED_HASH" = "$ACTUAL_HASH" ]; then
@@ -75,9 +76,21 @@ if curl -sSL -o "$TMPDIR/jpm.sha256" "$SHA256_URL" 2>/dev/null; then
             exit 1
         fi
     else
-        echo "✘ Error: Could not parse checksum file"
+        echo "✘ Error: Invalid checksum format"
+        echo "  Got: $EXPECTED_HASH"
+        echo "  Expected: 64-character hex string"
+        echo "  Checksum file content:"
+        cat "$TMPDIR/jpm.sha256"
         exit 1
     fi
+elif [ "$HTTP_CODE" = "404" ]; then
+    echo "⚠ Warning: Checksum file not found (404)"
+    echo "  Skipping checksum verification"
+    echo "  URL: $SHA256_URL"
+else
+    echo "⚠ Warning: Could not download checksum (HTTP $HTTP_CODE)"
+    echo "  Skipping checksum verification"
+fi
 fi
 
 # Determine if we need sudo for system directories
